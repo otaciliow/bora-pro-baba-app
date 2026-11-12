@@ -12,7 +12,7 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-
+import { DesktopHeader } from "@/components/DesktopHeader";
 import { AppSidebar, MobileBottomBar, MobileTopBar } from "@/components/AppNav";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { PendingCard } from "@/components/Auth";
@@ -158,10 +158,10 @@ function Gate() {
   }
   return (
     <>
-      <AppSidebar />
+      <DesktopHeader />
       <MobileTopBar />
       {/* Required: nested routes render here. */}
-      <div className="pb-20 md:pb-0 md:pl-60">
+      <div className="pb-20 md:pb-0">
         <Outlet />
       </div>
       <MobileBottomBar />

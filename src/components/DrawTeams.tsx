@@ -320,29 +320,6 @@ export default function DrawTeams() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Button asChild variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
-            <Link to="/" aria-label="Voltar para a tela inicial">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
-            <Trophy className="h-4.5 w-4.5" />
-          </span>
-          <div className="leading-tight">
-            <p className="font-display text-2xl tracking-wide sm:text-3xl">
-              Sorteio de <span className="text-primary">Times</span>
-            </p>
-            <p className="text-[11px] text-muted-foreground">{nextMatch ? new Date(nextMatch.match_date.replace("+00:00", "")).toLocaleDateString("pt-BR", {weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit"}) : "Baba da Segunda"} · {players.length} atletas na lista</p>
-          </div>
-          <Badge className="ml-auto hidden gap-1.5 border-transparent bg-secondary/15 text-secondary sm:flex">
-            <Scale className="h-3.5 w-3.5" />
-            Médias equilibradas
-          </Badge>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 pb-10">
         <ConfigPanel
           teamCount={teamCount}
@@ -405,9 +382,9 @@ function ConfigPanel({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 font-display text-3xl tracking-wide">
           <Dices className="h-6 w-6 text-primary" />
-          Painel de Configurações
+          Sorteio de Times
         </CardTitle>
-        <CardDescription>Escolhe como o baba de hoje vai ser dividido.</CardDescription>
+        <CardDescription>Sorteie como o baba de hoje vai ser dividido baseado nas notas dos jogadores.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -511,7 +488,7 @@ function TeamGrid({
 
       <div
         className={`grid gap-4 transition-opacity duration-300 ${sorting ? "opacity-40" : "opacity-100"} ${
-          teams.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
+          teams.length === 2 ? "sm:grid-cols-2" : teams.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-4"
         }`}
       >
         {teams.map((team, i) => (

@@ -259,29 +259,6 @@ export default function Finance() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="shrink-0 text-muted-foreground"
-          >
-            <Link to="/" aria-label="Voltar para a tela inicial">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
-            <Wallet className="h-4.5 w-4.5" />
-          </span>
-          <div className="leading-tight">
-            <p className="font-display text-2xl tracking-wide sm:text-3xl">
-              Financeiro <span className="text-primary">do Baba</span>
-            </p>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 pb-12">
         <div className="grid gap-3 sm:grid-cols-3">
           <StatCard

@@ -402,7 +402,7 @@ function ConfigPanel({
                 <ToggleGroupItem
                   key={n}
                   value={String(n)}
-                  className="flex-1 gap-1.5 rounded-xl border border-border font-display text-xl tracking-wide data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:shadow-primary/30"
+                  className="flex-1 gap-1.5 rounded-xl border border-border font-display md:text-xl tracking-wide data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:shadow-primary/30"
                 >
                   <Users className="h-4 w-4" />
                   {n} times

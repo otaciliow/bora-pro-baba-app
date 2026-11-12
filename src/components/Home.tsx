@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Loader,
   LoaderCircle,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,6 +196,15 @@ function Header({
 }) {
   const initials = profile?.name ? profile.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "BPB";
 
+  function useLogout() {
+    const { signOut } = useAuth();
+    const navigate = useNavigate();
+    return async () => {
+      await signOut();
+      navigate({ to: "/login", replace: true });
+    };
+  }
+
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:justify-between">
@@ -256,6 +266,9 @@ function Header({
               </span>
             </div>
           </div>
+          <Button size="sm" variant="ghost" onClick={useLogout} aria-label="Sair">
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
         </div>
 
       </div>

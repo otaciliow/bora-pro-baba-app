@@ -194,7 +194,7 @@ export function MobileTopBar() {
   return (
     <div className="flex flex-col gap-2 sticky top-0 z-30 border-b border-border bg-card/95 px-2 py-2 backdrop-blur md:hidden">
       <UserChip />
-      <NavigationLinks />
+      {/* <NavigationLinks /> */}
     </div>
   );
 }

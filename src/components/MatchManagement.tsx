@@ -104,7 +104,7 @@ export default function MatchManagement({ group }: MatchManagementProps) {
 
   const getMatchDateObj = (isoStr: string) => {
     try {
-      return parseISO(isoStr);
+      return new Date(isoStr.replace("+00:00", ""));;
     } catch {
       return new Date();
     }

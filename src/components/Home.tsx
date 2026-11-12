@@ -293,7 +293,7 @@ function NextMatchCard({
   onToggleRsvp: (val: boolean) => void;
   isSubmitting?: boolean;
 }) {
-  const matchDate = useMemo(() => (match?.match_date ? new Date(match.match_date) : new Date()), [match?.match_date]);
+  const matchDate = useMemo(() => (match?.match_date ? new Date(match.match_date.replace("+00:00", "")) : new Date()), [match?.match_date]);
   const { days, hours, minutes, seconds, live } = useCountdown(matchDate);
 
   if (loading) {

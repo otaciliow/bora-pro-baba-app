@@ -285,10 +285,10 @@ export default function DrawTeams() {
 
   const message = useMemo(() => {
     if (!teams) return "";
-    const matchDateFormatted = nextMatch?.match_date ? new Date(nextMatch.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "Próximo Baba";
+    const matchDateFormatted = nextMatch?.match_date ? new Date(nextMatch?.match_date.replace("+00:00", "")).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "Próximo Baba";
     const lines: string[] = [];
     lines.push(`----- ⚽ ${(group?.name).toUpperCase()} — ESCALAÇÃO DO BABA -----`);
-    lines.push(`📆 ${matchDateFormatted} · 📍 ${nextMatch?.location ?? "Campo Principal"}`);
+    lines.push(`📆 ${matchDateFormatted.replace(", ", " - ")} · 📍 ${nextMatch?.location ?? "Campo Principal"}`);
     lines.push(`${teams.length} times de ${perTeam} · R$ 20,00 por atleta visitante`);
     lines.push("");
     teams.forEach((t, i) => {
@@ -334,7 +334,7 @@ export default function DrawTeams() {
             <p className="font-display text-2xl tracking-wide sm:text-3xl">
               Sorteio de <span className="text-primary">Times</span>
             </p>
-            <p className="text-[11px] text-muted-foreground">{nextMatch ? new Date(nextMatch.match_date).toLocaleDateString("pt-BR", {weekday: "long", day: "2-digit", month: "long"}) : "Baba da Segunda"} · ${players.length} atletas na lista</p>
+            <p className="text-[11px] text-muted-foreground">{nextMatch ? new Date(nextMatch.match_date.replace("+00:00", "")).toLocaleDateString("pt-BR", {weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit"}) : "Baba da Segunda"} · {players.length} atletas na lista</p>
           </div>
           <Badge className="ml-auto hidden gap-1.5 border-transparent bg-secondary/15 text-secondary sm:flex">
             <Scale className="h-3.5 w-3.5" />

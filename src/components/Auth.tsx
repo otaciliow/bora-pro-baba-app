@@ -50,7 +50,7 @@ export default function Auth() {
       <header className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 opacity-[0.06] [background:repeating-linear-gradient(90deg,transparent_0_80px,oklch(0.7_0.17_162)_80px_82px)]" />
         <div className="absolute -top-24 left-1/2 h-72 w-2xl -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
-        <div className="relative mx-auto max-w-5xl px-6 py-16 text-center">
+        <div className="relative mx-auto max-w-5xl p-6 text-center">
           <div className="mx-auto mb-5 flex items-center justify-center gap-3">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
               <Trophy className="h-7 w-7" />

@@ -117,6 +117,28 @@ export default function Admin() {
     enabled: !!group?.id,
   });
 
+  const { data: pendingGuests = [] } = useQuery({
+    queryKey: ["pending-guests", group?.id],
+    queryFn: async () => {
+      if (!group?.id) return [];
+
+      const { data: matches } = await supabase.from("matches").select("id").eq("is_open", true);
+      if (!matches || matches.length === 0) return [];
+
+      const matchIds = matches.map(m => m.id);
+
+      const { data, error } = await supabase
+        .from("match_guests")
+        .select("*, matches(match_date, location), profiles:invited_by(name)")
+        .in("match_id", matchIds)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || []
+    },
+    enabled: !!group?.id,
+  })
+
   const { data: pendingPayments = [] } = useQuery({
     queryKey: ["pending-payments", group?.id],
     queryFn: async () => {
@@ -232,6 +254,34 @@ export default function Admin() {
     },
   });
 
+  const reviewGuestMutation = useMutation({
+    mutationFn: async ({ guestId, approve }: { guestId: string, approve: boolean }) => {
+      if (approve) {
+        const { error } = await supabase
+          .from("match_guests")
+          .update({ status: "approved" })
+          .eq("id", guestId);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("match_guests")
+          .delete()
+          .eq("id", guestId);
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { approve }) => {
+      queryClient.invalidateQueries({ queryKey: ["pending-guests"] });
+      queryClient.invalidateQueries({ queryKey: ["match-participants"] });
+      toast.success(approve ? "Visitante aprovado para o baba! ⚽" : "Visitante recusado no baba ❌");
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao atualizar status do visitante: ${err.message}`);
+    }
+  })
+
   const reviewPayments = async (paymentId: string, approve: boolean, athleteName: string) => {
     const { error } = await supabase
       .from("monthly_payments")
@@ -314,8 +364,8 @@ export default function Admin() {
           <TabsContent value="entrada" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Solicitações de Entrada</CardTitle>
-                <CardDescription>Atletas que pediram pra entrar pelo código de convite.</CardDescription>
+                <CardTitle>Solicitações de Entrada (Mensalista)</CardTitle>
+                <CardDescription>Atletas que pediram pra entrar como mensalista pelo código de convite.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {pendingMembers.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma solicitação pendente. 🎉</p>}
@@ -340,6 +390,48 @@ export default function Admin() {
                       </div>
                     </div>
                   )
+                })}
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Visitantes Pendentes</CardTitle>
+                <CardDescription>Convidados via link que aguardam a confirmação do pagamento para entrar no sorteio.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {pendingGuests.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Nenhum visitante aguardando aprovação. 🎉</p>}
+                {pendingGuests.map((g: any) => {
+                  const matchDateFormatted = g.matches?.match_date
+                    ? new Date(g.matches.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" })
+                    : "Próxima partida";
+                  
+                  const positionLabel = positionLabels[g.position?.toLowerCase()] || g.position || "Linha";
+                  const isApproved = g.status === "approved";
+
+                  return (
+                    <div key={g.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">
+                          {g.name} <span className="text-xs font-normal text-muted-foreground">({positionLabel})</span>
+                          {isApproved && <Badge variant="default" className="ml-4 text-[10px] h-5 bg-emerald-600 text-white">Aprovado</Badge>}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground mt-2">
+                          Baba em <span className="text-foreground font-medium">{matchDateFormatted}</span> · Convidado por <span className="text-foreground font-medium">{g.profiles?.name || "Mensalista"}</span>
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => reviewGuestMutation.mutate({ guestId: g.id, approve: true })} disabled={isApproved}>
+                          <Check className="h-4 w-4" />
+                          <span className="hidden sm:inline">Aprovar</span>
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => reviewGuestMutation.mutate({ guestId: g.id, approve: false })}>
+                          <X className="h-4 w-4" />
+                          <span className="hidden sm:inline">Recusar</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
                 })}
               </CardContent>
             </Card>

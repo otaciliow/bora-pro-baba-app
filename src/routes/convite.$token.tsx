@@ -73,6 +73,7 @@ function GuestInvite() {
           name: guestName.trim(),
           position: selectedPosition,
           rating: 5.0,
+          status: "pending",
         });
 
         if (error) throw error;

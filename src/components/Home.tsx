@@ -6,19 +6,18 @@ import {
   UserPlus,
   MapPin,
   Clock,
-  CalendarDays,
   Coins,
   Check,
-  X,
   Users,
   Timer,
   Goal,
   ShieldHalf,
   Zap,
-  FlaskConical,
   Dices,
   Wallet,
-  BedSingle,
+  ShieldCheck,
+  Loader,
+  LoaderCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,14 +49,6 @@ const POSITION_TO_PLAYER: Record<string, PlayerPosition> = {
 
 const GROUP_ORDER : PlayerGroup[] = ["Goleiros", "Defensores", "Meias", "Atacantes"];
 
-type Player = {
-  name: string;
-  group: "Goleiros" | "Defensores" | "Meias" | "Atacantes";
-  rating: number;
-  confirmed: boolean;
-  guest?: { id: string; invitedBy: string };
-};
-
 const GROUP_ICONS: Record<PlayerGroup, React.ReactNode> = {
   Goleiros: <Goal className="h-4 w-4" />,
   Defensores: <ShieldHalf className="h-4 w-4" />,
@@ -65,13 +56,9 @@ const GROUP_ICONS: Record<PlayerGroup, React.ReactNode> = {
   Atacantes: <Timer className="h-4 w-4" />,
 };
 
-// ============= Componentes =============
-
 export default function Home() {
   const { user, profile, membership, signOut } = useAuth();
   const queryClient = useQueryClient();
-
-  const currentReferenceMonth = new Date().toISOString().slice(0, 7) + "-01";
 
   const { data: group } = useQuery({
     queryKey: ["user-group-rpc", user?.id],
@@ -84,24 +71,22 @@ export default function Home() {
     enabled: !!user?.id,
   });
 
-  const { data: myPayment }= useQuery({
-    queryKey: ["my-payment", user?.id, currentReferenceMonth],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("monthly_payments")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("reference_month", currentReferenceMonth)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  const financialOk = myPayment?.status === "approved";
+  const { data: userRole, isLoading: isLoadingRole } = useQuery({
+      queryKey: ["admin-role-verification", group?.id, user?.id],
+      queryFn: async () => {
+        if (!group?.id || !user?.id) return null;
+        const { data, error } = await supabase
+          .from("group_members")
+          .select("role")
+          .eq("group_id", group.id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+  
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!group?.id && !!user?.id,
+    });
 
   const { data: nextMatch, isLoading: matchLoading } = useQuery({
     queryKey: ["next-match", membership?.group_id],
@@ -173,18 +158,21 @@ export default function Home() {
 
   const isConfirmed = participants?.presences.some((p: any) => p.user_id === user?.id);
 
+  const isChecking = isLoadingRole;
+  const isAdmin = userRole?.role === "admin";
+
   return (
     <div className="min-h-screen bg-background">
       <Header
         babaName={group?.name ?? "Bora pro Baba"}
         profile={profile}
-        financialOk={financialOk}
+        isChecking={isChecking}
+        isAdmin={isAdmin}
         onSignOut={signOut}
       />
 
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-        <NextMatchCard match={nextMatch} loading={matchLoading} isConfirmed={!!isConfirmed} onToggleRsvp={(val) => rsvpMutation.mutate(val)} />
-        <GuestInviteCard matchId={nextMatch?.id} userId={user?.id} />
+        <NextMatchCard match={nextMatch} loading={matchLoading} isConfirmed={!!isConfirmed} matchId={nextMatch?.id} userId={user?.id} onToggleRsvp={(val) => rsvpMutation.mutate(val)} isSubmitting={rsvpMutation.isPending} />
         <AttendanceList participants={participants} maxSlots={group?.max_confirmed ?? 24} currentUserId={user?.id} currentUserName={profile?.name} />
       </main>
     </div>
@@ -194,12 +182,14 @@ export default function Home() {
 function Header({
   babaName,
   profile,
-  financialOk,
+  isChecking,
+  isAdmin,
   onSignOut
 }: {
   babaName: string;
   profile: any;
-  financialOk: boolean;
+  isChecking: boolean;
+  isAdmin: boolean;
   onSignOut: () => void;
 }) {
   const initials = profile?.name ? profile.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "BPB";
@@ -238,7 +228,19 @@ function Header({
           </Link>
         </Button>
 
-        {/* Perfil do Atleta */}
+        {(!isChecking && isAdmin) && (
+          <Button
+            asChild
+            variant="outline"
+            className="gap-2 font-display text-lg tracking-wide text-primary"
+          >
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              Diretoria
+            </Link>
+          </Button>
+        )}
+
         <div className="ml-auto flex items-center gap-3 rounded-2xl border border-border bg-card py-2 pl-2 pr-3">
           <Avatar className="h-10 w-10 border border-border">
             <AvatarFallback className="bg-primary/15 font-display text-lg tracking-wide text-primary">
@@ -251,15 +253,6 @@ function Header({
               <span className="text-xs text-muted-foreground">
                 {POSITION_TO_PLAYER[profile?.primary_position] ?? "Coringa"} / Nota {profile?.rating ?? "5.0"}
               </span>
-              {financialOk ? (
-                <Badge className="border-transparent bg-primary/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-primary">
-                  Mensalidade Regular
-                </Badge>
-              ) : (
-                <Badge className="border-transparent bg-destructive/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-destructive">
-                  Pendente
-                </Badge>
-              )}
             </div>
           </div>
         </div>
@@ -287,18 +280,29 @@ function NextMatchCard({
   match,
   loading,
   isConfirmed,
+  matchId,
+  userId,
   onToggleRsvp,
+  isSubmitting
 }: {
   match: any;
   loading: boolean;
   isConfirmed?: boolean;
+  matchId?: string | undefined;
+  userId?: string | undefined
   onToggleRsvp: (val: boolean) => void;
+  isSubmitting?: boolean;
 }) {
   const matchDate = useMemo(() => (match?.match_date ? new Date(match.match_date) : new Date()), [match?.match_date]);
   const { days, hours, minutes, seconds, live } = useCountdown(matchDate);
 
   if (loading) {
-    return <Card className="p-6 text-center text-muted-foreground" >Carregando próxima partida...</Card>
+    return (
+      <Card className="flex gap-3 items-center p-6 justify-center text-muted-foreground" >
+        Buscando próxima partida...
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+      </Card>
+    )
   }
 
   if (!match) {
@@ -351,7 +355,7 @@ function NextMatchCard({
             label="Local"
             value={match.location ?? "Campo Principal"}
           />
-          <InfoChip icon={<Coins className="h-4 w-4" />} label="Valor" value={`R$ 55,00`} />
+          <InfoChip icon={<UserPlus className="h-4 w-4" />} label="Convidar visitantes" value="Confirme presença para ver o link" isInvite={true} matchId={matchId} userId={userId} isConfirmed={isConfirmed} />
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -361,8 +365,17 @@ function NextMatchCard({
             className="flex-1 font-display text-2xl tracking-wide"
             onClick={() => onToggleRsvp(!isConfirmed)}
           >
-            <Check className="mr-2 h-5 w-5" />
-            {isConfirmed ? "Presenã confirmada!" : "Bora pro Baba!"}
+            {isSubmitting ? (
+              <>
+                <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+                {isConfirmed ? "Cancelando..." : "Confirmando..."}
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-5 w-5" />
+                {isConfirmed ? "Presença confirmada! Clique novamente para cancelar" : "Bora pro Baba!"}
+              </>
+            )}
           </Button>
         </div>
       </CardContent>
@@ -370,9 +383,55 @@ function NextMatchCard({
   );
 }
 
-function InfoChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function InfoChip({ 
+    icon, 
+    label, 
+    value, 
+    isInvite, 
+    matchId, 
+    userId,
+    isConfirmed, 
+  }: { 
+    icon: React.ReactNode; 
+    label: string; 
+    value?: string; 
+    isInvite?:boolean; 
+    matchId?: string | undefined; 
+    userId?: string | undefined; 
+    isConfirmed?: boolean | undefined;
+  }) {
+
+  const generate = async () => {
+    if (!matchId || !userId) return;
+
+    const { data, error } = await supabase
+      .from("guest_invites")
+      .insert({ 
+        match_id: matchId,
+        created_by: userId,
+       })
+      .select("token")
+      .single()
+
+    if (error || !data) {
+      toast.error("Erro ao gerar link de convite.");
+      return;
+    }
+
+    const url = `${window.location.origin}/convite/${data.token}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado! Mande para os visitantes.");
+    } catch {
+      toast.success("Link gerado com sucesso!");
+    }
+  };
+
+  const linkAllowed = isInvite && isConfirmed
+
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3">
+    <div className={`flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3 ${linkAllowed && 'cursor-pointer'}`}>
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
         {icon}
       </span>
@@ -380,7 +439,13 @@ function InfoChip({ icon, label, value }: { icon: React.ReactNode; label: string
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           {label}
         </p>
-        <p className="text-sm font-semibold">{value}</p>
+        { linkAllowed ? (
+          <p className="text-sm font-semibold flex gap-1 items-center" onClick={generate}>
+            <Link2 className="h-4 w-4" /><span>Clique para copiar link de convite</span>
+          </p>
+        ) : (
+          <p className="text-sm font-semibold">{value}</p>
+        )}
       </div>
     </div>
   );
@@ -501,17 +566,21 @@ function AttendanceList({
                         {p.name}
                         {p.isMe && <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-secondary">você</span>}
                       </span>
-                      {p.invitedBy ? (
-                        <Popover>
-                          <PopoverTrigger className="text-xs text-secondary underline">Visitante</PopoverTrigger>
-                          <PopoverContent className="p-3 text-xs">Convidado por {p.invitedBy}</PopoverContent>
-                        </Popover>
-                      ) : (
-                        <Badge variant="outline" className="border-primary/40 text-primary">Mensalista</Badge>
-                      )}
-                      <span className="ml-auto rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                        Nota {Number(p.rating).toFixed(1)}
-                      </span>
+                      <div className="ml-auto flex items-center gap-4">
+                        {p.invitedBy ? (
+                          <Popover>
+                            <PopoverTrigger>
+                              <Badge variant="outline" className="border-secondary/40 text-secondary cursor-pointer">Visitante</Badge>
+                            </PopoverTrigger>
+                            <PopoverContent className="p-3 text-xs">Convidado por {p.invitedBy}</PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Badge variant="outline" className="border-primary/40 text-primary">Mensalista</Badge>
+                        )}
+                        <span className="ml-auto rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                          Nota {Number(p.rating).toFixed(1)}
+                        </span>
+                      </div>
                     </li>
                   ))
                 )}
@@ -521,61 +590,5 @@ function AttendanceList({
         </CardContent>
       </Card>
     </section>
-  );
-}
-
-function GuestInviteCard({ matchId, userId }: {matchId?: string | undefined; userId?: string | undefined }) {
-  const [link, setLink] = useState<string | null>(null);
-
-  const generate = async () => {
-    if (!matchId || !userId) return;
-
-    const { data, error } = await supabase
-      .from("guest_invites")
-      .insert({ 
-        match_id: matchId,
-        created_by: userId,
-       })
-      .select("token")
-      .single()
-
-    if (error || !data) {
-      toast.error("Erro ao gerar link de convite.");
-      return;
-    }
-
-    const url = `${window.location.origin}/convite/${data.token}`;
-    setLink(url)
-
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copiado! Mande para os visitantes.");
-    } catch {
-      toast.success("Link gerado com sucesso!");
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-display text-2xl tracking-wide">
-          <UserPlus className="h-5 w-5 text-secondary" /> Convidar Visitantes
-        </CardTitle>
-        <CardDescription>
-          Gere um link para um ou mais amigos colocarem nome e posição. Eles entram no próximo baba com nota 5.0.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Button onClick={generate} variant="secondary" className="gap-2">
-          <Link2 className="h-4 w-4" /> Gerar link de convite
-        </Button>
-        {link && (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <code className="max-w-full truncate rounded bg-muted px-2 py-1">{link}</code>
-            <a href={link} target="_blank" rel="noreferrer" className="text-primary underline">Abrir</a>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }

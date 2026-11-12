@@ -99,7 +99,11 @@ export default function Admin() {
     if (group?.pix_key) {
       setPixInput(group.pix_key);
     }
-  }, [group?.pix_key]);
+
+    if (group?.monthly_fee) {
+      setMonthlyFeeInput(group?.monthly_fee);
+    }
+  }, [group?.pix_key, group?.monthly_fee]);
 
   const { data: pendingMembers = [] } = useQuery({
     queryKey: ["pending-members", group?.id],
@@ -510,7 +514,6 @@ export default function Admin() {
                     <Input 
                       id="monthly-fee" 
                       type="number" 
-                      step="0.01" 
                       className="pl-9" 
                       value={monthlyFeeInput} 
                       onChange={(e) => setMonthlyFeeInput(e.target.value)} 

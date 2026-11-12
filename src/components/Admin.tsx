@@ -337,7 +337,6 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
             <ShieldCheck className="h-5 w-5" />
@@ -347,7 +346,6 @@ export default function Admin() {
             <p className="truncate text-xs text-muted-foreground">{group?.name ??  "Carregando..."} · {"você é admin"}</p>
           </div>
         </div>
-      </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <Tabs defaultValue="entrada">

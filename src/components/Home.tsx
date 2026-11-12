@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,13 +39,6 @@ const POSITION_TO_GROUP: Record<string, PlayerGroup> = {
   defender: "Defensores",
   midfielder: "Meias",
   forward: "Atacantes",
-}
-
-const POSITION_TO_PLAYER: Record<string, PlayerPosition> = {
-  goalkeeper: "Goleiro",
-  defender: "Defensor",
-  midfielder: "Meia",
-  forward: "Atacante",
 }
 
 const GROUP_ORDER : PlayerGroup[] = ["Goleiros", "Defensores", "Meias", "Atacantes"];
@@ -71,23 +64,6 @@ export default function Home() {
     },
     enabled: !!user?.id,
   });
-
-  const { data: userRole, isLoading: isLoadingRole } = useQuery({
-      queryKey: ["admin-role-verification", group?.id, user?.id],
-      queryFn: async () => {
-        if (!group?.id || !user?.id) return null;
-        const { data, error } = await supabase
-          .from("group_members")
-          .select("role")
-          .eq("group_id", group.id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-  
-        if (error) throw error;
-        return data;
-      },
-      enabled: !!group?.id && !!user?.id,
-    });
 
   const { data: nextMatch, isLoading: matchLoading } = useQuery({
     queryKey: ["next-match", membership?.group_id],
@@ -160,110 +136,14 @@ export default function Home() {
 
   const isConfirmed = participants?.presences.some((p: any) => p.user_id === user?.id);
 
-  const isChecking = isLoadingRole;
-  const isAdmin = userRole?.role === "admin";
-
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        babaName={group?.name ?? "Bora pro Baba"}
-        profile={profile}
-        isChecking={isChecking}
-        isAdmin={isAdmin}
-        onSignOut={signOut}
-      />
 
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
         <NextMatchCard match={nextMatch} loading={matchLoading} isConfirmed={!!isConfirmed} matchId={nextMatch?.id} userId={user?.id} onToggleRsvp={(val) => rsvpMutation.mutate(val)} isSubmitting={rsvpMutation.isPending} />
         <AttendanceList participants={participants} maxSlots={group?.max_confirmed ?? 24} currentUserId={user?.id} currentUserName={profile?.name} />
       </main>
     </div>
-  );
-}
-
-function Header({
-  babaName,
-  profile,
-  isChecking,
-  isAdmin,
-  onSignOut
-}: {
-  babaName: string;
-  profile: any;
-  isChecking: boolean;
-  isAdmin: boolean;
-  onSignOut: () => void;
-}) {
-  const initials = profile?.name ? profile.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "BPB";
-
-  return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
-            <Trophy className="h-5 w-5" />
-          </span>
-          <span className="hidden font-display text-3xl leading-none tracking-wide sm:block">
-            {babaName}
-          </span>
-        </div>
-
-        <Button
-          asChild
-          variant="outline"
-          className="gap-2 font-display text-lg tracking-wide text-secondary"
-        >
-          <Link to="/sorteio">
-            <Dices className="h-4 w-4" />
-            Sorteio de Times
-          </Link>
-        </Button>
-
-        <Button
-          asChild
-          variant="outline"
-          className="gap-2 font-display text-lg tracking-wide text-primary"
-        >
-          <Link to="/financeiro">
-            <Wallet className="h-4 w-4" />
-            Financeiro
-          </Link>
-        </Button>
-
-        {(!isChecking && isAdmin) && (
-          <Button
-            asChild
-            variant="outline"
-            className="gap-2 font-display text-lg tracking-wide text-primary"
-          >
-            <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              Diretoria
-            </Link>
-          </Button>
-        )}
-
-        <div className="ml-auto flex items-center gap-3 rounded-2xl border border-border bg-card py-2 pl-2 pr-3">
-          <Avatar className="h-10 w-10 border border-border">
-            <AvatarFallback className="bg-primary/15 font-display text-lg tracking-wide text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="leading-tight">
-            <p className="text-sm font-semibold">{profile?.name ?? "Atleta"}</p>
-            <div className="mt-0.5 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">
-                {POSITION_TO_PLAYER[profile?.primary_position] ?? "Coringa"} / Nota {profile?.rating ?? "5.0"}
-              </span>
-            </div>
-          </div>
-          <Button size="sm" variant="ghost" onClick={onSignOut} aria-label="Sair">
-            <LogOut className="h-4 w-4" /> Sair
-          </Button>
-        </div>
-
-      </div>
-    </header>
   );
 }
 

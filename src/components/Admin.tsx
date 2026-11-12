@@ -450,13 +450,12 @@ export default function Admin() {
                 {pendingPayments.map((p: any) => {
                   const athleteName = p.profiles?.name || "Atleta";
                   const monthLabel = formatDateToMonthLabel(p.reference_month);
-                  const formattedValue = Number(p.amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
                   return (
                     <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3">
                       <div className="min-w-0">
                         <p className="truncate font-semibold">{athleteName}</p>
-                        <p className="truncate text-xs text-muted-foreground">{monthLabel} · {formattedValue}</p>
+                        <p className="truncate text-xs text-muted-foreground">{monthLabel}</p>
                       </div>
                       <Button size="sm" variant="secondary" onClick={() => setPreview(p)}><Eye className="h-4 w-4" /> Detalhes</Button>
                     </div>

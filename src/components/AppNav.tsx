@@ -76,28 +76,128 @@ function UserChip() {
 
   if (!user) return null;
 
+  const { data: group } = useQuery({
+    queryKey: ["user-group-rpc", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase.rpc as any)("get_user_group");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   const name = profile?.name ?? "Atleta Base"
   const initials = name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-9 w-9 items-center gap-2">
-        <AvatarFallback className="bg-primary/15 font-display text-xs tracking-wide text-primary">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
+    <div className="flex items-center justify-between">
+      <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
+            <Trophy className="h-4 w-4" />
+        </span>
+        <span className="font-display text-xl leading-none tracking-wide">
+            {group?.name}
+        </span>
+      </Link>
+      {/* Comentado momentaneamente - estrutura será avaliada */}
+      {/* <div className="flex items-center gap-2">
+        <Avatar className="h-9 w-9 items-center gap-2">
+          <AvatarFallback className="bg-primary/15 font-display text-xs tracking-wide text-primary">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
+      </div> */}
       <Button size="sm" variant="ghost" onClick={logout} aria-label="Sair">
         <LogOut className="h-4 w-4" /> Sair
       </Button>
+    
     </div>
   );
 }
 
+function NavigationLinks() {
+  const { user } = useAuth();
+
+  const { data: group } = useQuery({
+    queryKey: ["user-group-rpc", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase.rpc as any)("get_user_group");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: userRole, isLoading: isLoadingRole } = useQuery({
+    queryKey: ["admin-role-verification", group?.id, user?.id],
+    queryFn: async () => {
+      if (!group?.id || !user?.id) return null;
+      const { data, error } = await supabase
+        .from("group_members")
+        .select("role")
+        .eq("group_id", group.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!group?.id && !!user?.id,
+  });
+
+  const isAdmin = !isLoadingRole && userRole?.role === "admin";
+
+  return (
+    <div className="flex items-center">
+        {/* Navegação Principal */}
+        <nav className="flex items-center gap-2">
+          <Button
+              asChild
+              variant="outline"
+              className="gap-2 font-display text-lg tracking-wide text-secondary [&.active]:border-secondary [&.active]:bg-secondary/10"
+          >
+              <Link to="/sorteio">
+              <Dices className="h-4 w-4" />
+              Sorteio de Times
+              </Link>
+          </Button>
+
+          <Button
+              asChild
+              variant="outline"
+              className="gap-2 font-display text-lg tracking-wide text-primary [&.active]:border-primary [&.active]:bg-primary/10"
+          >
+              <Link to="/financeiro">
+              <Wallet className="h-4 w-4" />
+              Financeiro
+              </Link>
+          </Button>
+
+          {isAdmin && (
+              <Button
+              asChild
+              variant="outline"
+              className="gap-2 font-display text-lg tracking-wide text-primary [&.active]:border-primary [&.active]:bg-primary/10"
+              >
+              <Link to="/admin">
+                  <ShieldCheck className="h-4 w-4" />
+                  Diretoria
+              </Link>
+              </Button>
+          )}
+        </nav>
+    </div>
+  )
+}
+
 export function MobileTopBar() {
   return (
-    <div className="sticky top-0 z-30 border-b border-border bg-card/95 px-4 py-2 backdrop-blur md:hidden">
+    <div className="flex flex-col gap-2 sticky top-0 z-30 border-b border-border bg-card/95 px-2 py-2 backdrop-blur md:hidden">
       <UserChip />
+      <NavigationLinks />
     </div>
   );
 }

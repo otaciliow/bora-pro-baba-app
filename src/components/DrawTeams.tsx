@@ -205,6 +205,7 @@ export default function DrawTeams() {
         .from("match_guests")
         .select("*")
         .eq("match_id", nextMatch.id)
+        .eq("status", "approved");
 
       if (gError) throw gError;
 

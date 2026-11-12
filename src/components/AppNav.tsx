@@ -91,24 +91,21 @@ function UserChip() {
   const initials = name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <div className="flex items-center justify-between">
-      <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
+    <div className="flex items-center gap-2 px-1">
+      {/* <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/30">
             <Trophy className="h-4 w-4" />
         </span>
         <span className="font-display text-xl leading-none tracking-wide">
             {group?.name}
         </span>
-      </Link>
-      {/* Comentado momentaneamente - estrutura será avaliada */}
-      {/* <div className="flex items-center gap-2">
-        <Avatar className="h-9 w-9 items-center gap-2">
-          <AvatarFallback className="bg-primary/15 font-display text-xs tracking-wide text-primary">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
-      </div> */}
+      </Link> */}
+      <Avatar className="h-9 w-9 items-center gap-2">
+        <AvatarFallback className="bg-primary/15 font-display text-xs tracking-wide text-primary">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
       <Button size="sm" variant="ghost" onClick={logout} aria-label="Sair">
         <LogOut className="h-4 w-4" /> Sair
       </Button>
@@ -197,7 +194,7 @@ export function MobileTopBar() {
   return (
     <div className="flex flex-col gap-2 sticky top-0 z-30 border-b border-border bg-card/95 px-2 py-2 backdrop-blur md:hidden">
       <UserChip />
-      <NavigationLinks />
+      {/* <NavigationLinks /> */}
     </div>
   );
 }

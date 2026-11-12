@@ -414,10 +414,10 @@ export default function Admin() {
                   return (
                     <div key={g.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3">
                       <div className="min-w-0">
-                        <p className="truncate font-semibold">
+                        <span className="truncate font-semibold">
                           {g.name} <span className="text-xs font-normal text-muted-foreground">({positionLabel})</span>
                           {isApproved && <Badge variant="default" className="ml-4 text-[10px] h-5 bg-emerald-600 text-white">Aprovado</Badge>}
-                        </p>
+                        </span>
                         <p className="truncate text-xs text-muted-foreground mt-2">
                           Baba em <span className="text-foreground font-medium">{matchDateFormatted}</span> · Convidado por <span className="text-foreground font-medium">{g.profiles?.name || "Mensalista"}</span>
                         </p>

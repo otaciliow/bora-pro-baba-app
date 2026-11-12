@@ -462,7 +462,7 @@ function AttendanceList({
                           <Badge variant="outline" className="border-primary/40 text-primary">Mensalista</Badge>
                         )}
                         <span className="ml-auto rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                          Nota {Number(p.rating).toFixed(1)}
+                          {Number(p.rating).toFixed(1)}
                         </span>
                       </div>
                     </li>

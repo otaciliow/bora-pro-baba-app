@@ -415,7 +415,7 @@ function PixCard({
               {!isDisabled && (
                 <Send className="h-4 w-4"/>
               )}
-              {isPending ? "Registrando..." : isDisabled ? "Mensalidade Regularizada" : "Informar Pagamento via PIX"}
+              {isPending ? "Registrando..." : isDisabled ? "Pagamento informado" : "Informar Pagamento via PIX"}
             </Button>
           </div>
         </div>

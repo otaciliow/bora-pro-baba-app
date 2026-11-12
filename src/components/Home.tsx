@@ -13,6 +13,7 @@ import {
   Goal,
   ShieldHalf,
   Zap,
+  X,
   Dices,
   Wallet,
   ShieldCheck,
@@ -181,6 +182,12 @@ function NextMatchCard({
   const matchDate = useMemo(() => (match?.match_date ? new Date(match.match_date.replace("+00:00", "")) : new Date()), [match?.match_date]);
   const { days, hours, minutes, seconds, live } = useCountdown(matchDate);
 
+  const buttonIcon = isSubmitting ? (<LoaderCircle className="h-5 w-5 animate-spin" />) : isConfirmed ? (<X className="h-5 w-5" />) : (<Check className="h-5 w-5" />);
+
+  const buttonLabel = isSubmitting
+    ? isConfirmed ? "Cancelando..." : "Confirmando..."
+    : isConfirmed ? "Não vou mais..." : "Eu vou!";
+
   if (loading) {
     return (
       <Card className="flex gap-3 items-center p-6 justify-center text-muted-foreground" >
@@ -243,24 +250,15 @@ function NextMatchCard({
           <InfoChip icon={<UserPlus className="h-4 w-4" />} label="Convidar visitantes" value="Confirme presença para ver o link" isInvite={true} matchId={matchId} userId={userId} isConfirmed={isConfirmed} />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Button
             size="lg"
             variant={isConfirmed ? "secondary" : "default"}
-            className="flex-1 font-display text-2xl tracking-wide"
+            className="flex-1 font-display text-2xl tracking-wide max-w-sm"
             onClick={() => onToggleRsvp(!isConfirmed)}
           >
-            {isSubmitting ? (
-              <>
-                <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
-                {isConfirmed ? "Cancelando..." : "Confirmando..."}
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-5 w-5" />
-                {isConfirmed ? "Presença confirmada! Clique novamente para cancelar" : "Bora pro Baba!"}
-              </>
-            )}
+            {buttonIcon}
+            <span>{buttonLabel}</span>
           </Button>
         </div>
       </CardContent>

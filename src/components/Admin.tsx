@@ -427,7 +427,7 @@ export default function Admin() {
                           <Check className="h-4 w-4" />
                           <span className="hidden sm:inline">Aprovar</span>
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => reviewGuestMutation.mutate({ guestId: g.id, approve: false })}>
+                        <Button size="sm" variant="secondary" onClick={() => reviewGuestMutation.mutate({ guestId: g.id, approve: false })}>
                           <X className="h-4 w-4" />
                           <span className="hidden sm:inline">Recusar</span>
                         </Button>

@@ -119,7 +119,8 @@ export default function Home() {
       const { data: guests, error: gError } = await supabase
         .from("match_guests")
         .select(`*, profiles:invited_by(name)`)
-        .eq("match_id", nextMatch.id);
+        .eq("match_id", nextMatch.id)
+        .eq("status", "approved");
 
       if (gError) throw gError;
 

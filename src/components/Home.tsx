@@ -20,6 +20,7 @@ import {
   Loader,
   LoaderCircle,
   LogOut,
+  SportShoe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +49,7 @@ const GROUP_ICONS: Record<PlayerGroup, React.ReactNode> = {
   Goleiros: <Goal className="h-4 w-4" />,
   Defensores: <ShieldHalf className="h-4 w-4" />,
   Meias: <Zap className="h-4 w-4" />,
-  Atacantes: <Timer className="h-4 w-4" />,
+  Atacantes: <SportShoe className="h-4 w-4" />,
 };
 
 export default function Home() {

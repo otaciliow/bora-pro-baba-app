@@ -196,15 +196,6 @@ function Header({
 }) {
   const initials = profile?.name ? profile.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "BPB";
 
-  function useLogout() {
-    const { signOut } = useAuth();
-    const navigate = useNavigate();
-    return async () => {
-      await signOut();
-      navigate({ to: "/login", replace: true });
-    };
-  }
-
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:justify-between">
@@ -266,7 +257,7 @@ function Header({
               </span>
             </div>
           </div>
-          <Button size="sm" variant="ghost" onClick={useLogout} aria-label="Sair">
+          <Button size="sm" variant="ghost" onClick={onSignOut} aria-label="Sair">
             <LogOut className="h-4 w-4" /> Sair
           </Button>
         </div>

@@ -16,6 +16,7 @@ import { DesktopHeader } from "@/components/DesktopHeader";
 import { AppSidebar, MobileBottomBar, MobileTopBar } from "@/components/AppNav";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { PendingCard } from "@/components/Auth";
+import { LoaderCircle } from "lucide-react";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -142,7 +143,14 @@ function Gate() {
 
   if (isAuthPage) return <Outlet />;
   if (!ready || status === "anonymous") {
-    return <div className="grid min-h-screen place-items-center text-muted-foreground">Carregando…</div>;
+    return (
+    <div className="grid min-h-screen place-items-center text-muted-foreground">
+      <div className="flex gap-2 items-center">
+        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-xl">Carregando…</span>
+      </div>
+    </div>
+  );
   }
   if (status === "pending") {
     return (

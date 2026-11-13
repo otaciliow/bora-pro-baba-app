@@ -27,6 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { HomeSkeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -53,10 +54,10 @@ const GROUP_ICONS: Record<PlayerGroup, React.ReactNode> = {
 };
 
 export default function Home() {
-  const { user, profile, membership, signOut } = useAuth();
+  const { user, profile, membership, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: group } = useQuery({
+  const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["user-group-rpc", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -83,7 +84,7 @@ export default function Home() {
     },
   });
 
-  const { data: participants } = useQuery({
+  const { data: participants, isLoading: participantsLoading } = useQuery({
     queryKey: ["match-participants", nextMatch?.id],
     queryFn: async () => {
       if (!nextMatch?.id) return { presences: [], guests: [] };
@@ -137,6 +138,14 @@ export default function Home() {
   });
 
   const isConfirmed = participants?.presences.some((p: any) => p.user_id === user?.id);
+
+  const isInitialLoading = authLoading || groupLoading || matchLoading || participantsLoading;
+
+  if (isInitialLoading) {
+    return (
+      <HomeSkeleton />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

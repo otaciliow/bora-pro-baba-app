@@ -87,7 +87,7 @@ export default function Admin() {
     enabled: !!group?.id && !!user?.id,
   });
 
-  const isChecking = authLoading || membershipLoading;
+  const isChecking = authLoading || groupLoading || membershipLoading;
   const isAdmin = membership?.role === "admin";
 
   useEffect(() => {

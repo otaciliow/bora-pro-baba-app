@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AdminSkeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,7 +47,7 @@ function formatDateToMonthLabel(dateString: string): string {
 }
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [preview, setPreview] = useState<any | null>(null);
@@ -57,7 +58,7 @@ export default function Admin() {
   const [limitDraft, setLimitDraft] = useState(limit);
   useEffect(() => setLimitDraft(limit), [limit]);
 
-  const { data: group, isLoading } = useQuery({
+  const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["admin-group", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -69,7 +70,7 @@ export default function Admin() {
     enabled: !!user?.id,
   });
 
-  const { data: membership, isLoading: isLoadingMembership } = useQuery({
+  const { data: membership, isLoading: membershipLoading } = useQuery({
     queryKey: ["admin-role-verification", group?.id, user?.id],
     queryFn: async () => {
       if (!group?.id || !user?.id) return null;
@@ -86,7 +87,7 @@ export default function Admin() {
     enabled: !!group?.id && !!user?.id,
   });
 
-  const isChecking = isLoading || isLoadingMembership;
+  const isChecking = authLoading || groupLoading || membershipLoading;
   const isAdmin = membership?.role === "admin";
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export default function Admin() {
     }
   }, [group?.pix_key, group?.monthly_fee]);
 
-  const { data: pendingMembers = [] } = useQuery({
+  const { data: pendingMembers = [], isLoading: pendingMembersLoading } = useQuery({
     queryKey: ["pending-members", group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
@@ -121,7 +122,7 @@ export default function Admin() {
     enabled: !!group?.id,
   });
 
-  const { data: pendingGuests = [] } = useQuery({
+  const { data: pendingGuests = [], isLoading: pendingGuestsLoading } = useQuery({
     queryKey: ["pending-guests", group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
@@ -143,7 +144,7 @@ export default function Admin() {
     enabled: !!group?.id,
   })
 
-  const { data: pendingPayments = [] } = useQuery({
+  const { data: pendingPayments = [], isLoading: pendingPaymentsLoading } = useQuery({
     queryKey: ["pending-payments", group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
@@ -180,7 +181,7 @@ export default function Admin() {
 
   const [editedRatings, setEditedRatings] = useState<Record<string, number>>({});
 
-  const { data: groupAthletes = [] } = useQuery({
+  const { data: groupAthletes = [], isLoading: groupAthletesLoading } = useQuery({
     queryKey: ["group-athletes", group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
@@ -334,6 +335,14 @@ export default function Admin() {
     }
     queryClient.invalidateQueries({ queryKey: ["group-athletes"] });
   };
+
+  const isInitialLoading = authLoading || pendingMembersLoading || pendingGuestsLoading;
+
+  if (isInitialLoading) {
+    return (
+      <AdminSkeleton />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

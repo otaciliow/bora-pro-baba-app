@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FinanceSkeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -137,12 +138,12 @@ async function copyToClipboard(text: string): Promise<boolean> {
 // ============= Tela =============
 
 export default function Finance() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [selectedMonth, setSelectedMonth] = useState<string>(CURRENT_MONTH);
   const [copied, setCopied] = useState(false);
 
-  const { data: group } = useQuery({
+  const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["user-group-finance", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -156,7 +157,7 @@ export default function Finance() {
   const fee = group?.monthly_fee ?? 0;
   const pixKey = group?.pix_key || "Chave Pix não cadastrada";
 
-  const { data: paymentsData = [] } = useQuery({
+  const { data: paymentsData = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ["user-payments", group?.id, user?.id],
     queryFn: async () => {
       if (!group?.id || !user?.id) return [];
@@ -256,6 +257,14 @@ export default function Finance() {
       });
     }
   };
+
+  const isInitialLoading = authLoading || groupLoading || paymentsLoading;
+
+  if (isInitialLoading) {
+    return (
+      <FinanceSkeleton />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

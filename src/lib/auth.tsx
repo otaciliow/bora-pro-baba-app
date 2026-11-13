@@ -20,6 +20,7 @@ export interface GroupMembership {
 
 interface AuthCtx {
     ready: boolean;
+    isLoading: boolean;
     status: AuthStatus;
     user: User | null;
     profile: UserProfile | null;
@@ -181,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <Ctx.Provider
             value={{
                 ready,
+                isLoading: !ready,
                 status,
                 user,
                 profile,

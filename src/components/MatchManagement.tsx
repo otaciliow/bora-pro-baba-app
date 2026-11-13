@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, Clock, MapPin, Plus, Ban } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Plus, Ban, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ interface MatchManagementProps {
 }
 
 export default function MatchManagement({ group }: MatchManagementProps) {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   // const match = useOpenMatch();
   const [showForm, setShowForm] = useState(false);
@@ -30,7 +29,7 @@ export default function MatchManagement({ group }: MatchManagementProps) {
   const [location, setLocation] = useState("");
   const [error, setError] = useState("");
 
-  const { data: match } = useQuery({
+  const { data: match, isLoading: matchLoading } = useQuery({
     queryKey: ["group-next-match", group?.id],
     queryFn: async () => {
       if (!group?.id) return null;
@@ -118,7 +117,13 @@ export default function MatchManagement({ group }: MatchManagementProps) {
           <Plus className="h-4 w-4" /> Nova partida
         </Button>
       </div>
-      {match ? (
+      
+      {matchLoading ? (
+        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+          <LoaderCircle className="h-4 w-4 animate-spin text-primary" />
+          Buscando dados da partida...
+        </div>
+      ) : match ? (
         <div className="mt-4 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">

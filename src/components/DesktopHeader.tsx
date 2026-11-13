@@ -2,6 +2,7 @@
 import { Trophy, Dices, Wallet, ShieldCheck, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DesktopHeaderSkeleton } from "@/components/ui/skeleton";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -15,9 +16,9 @@ const POSITION_TO_PLAYER: Record<string, string> = {
 };
 
 export function DesktopHeader() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isLoading: authLoading } = useAuth();
 
-  const { data: group } = useQuery({
+  const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["user-group-rpc", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -45,11 +46,18 @@ export function DesktopHeader() {
     enabled: !!group?.id && !!user?.id,
   });
 
+  const isHeaderLoading = authLoading || groupLoading || isLoadingRole;
   const isAdmin = !isLoadingRole && userRole?.role === "admin";
   const babaName = group?.name ?? "Bora pro Baba";
   const initials = profile?.name
     ? profile.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
     : "BPB";
+
+  if (isHeaderLoading) {
+    return (
+      <DesktopHeaderSkeleton />
+    )
+  }
 
   return (
     <header className="sticky top-0 z-20 hidden border-b border-border bg-background/90 backdrop-blur md:block">

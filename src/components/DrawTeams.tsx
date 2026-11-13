@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DrawTeamsSkeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -164,7 +165,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 // ============= Componente =============
 
 export default function DrawTeams() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [teamCount, setTeamCount] = useState(2);
   const [perTeam, setPerTeam] = useState(6);
   const [teams, setTeams] = useState<Team[] | null>(null);
@@ -173,7 +174,7 @@ export default function DrawTeams() {
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const { data: nextMatch } = useQuery({
+  const { data: nextMatch, isLoading: nextMatchLoading } = useQuery({
     queryKey: ["next-match-sorteio"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -189,7 +190,7 @@ export default function DrawTeams() {
     },
   });
 
-  const { data: participants } = useQuery({
+  const { data: participants, isLoading: participantsLoading } = useQuery({
     queryKey: ["match-participants-sorteio", nextMatch?.id],
     queryFn: async () => {
       if (!nextMatch?.id) return { presences: [], guests: [] };
@@ -214,7 +215,7 @@ export default function DrawTeams() {
     enabled: !!nextMatch?.id,
   });
 
-  const { data: group } = useQuery({
+  const { data: group, isLoading: groupLoading } = useQuery({
       queryKey: ["user-group-draw", user?.id],
       queryFn: async () => {
         if (!user?.id) return null;
@@ -317,6 +318,14 @@ export default function DrawTeams() {
       });
     }
   };
+
+  const isInitialLoading = authLoading || groupLoading || participantsLoading || nextMatchLoading;
+
+  if (isInitialLoading) {
+    return (
+      <DrawTeamsSkeleton />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

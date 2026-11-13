@@ -9,7 +9,8 @@ import {
   Hourglass,
   Sparkles,
   Eye,
-  EyeOff
+  EyeOff,
+  LoaderCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,10 +53,10 @@ export default function Auth() {
         <div className="absolute -top-24 left-1/2 h-72 w-2xl -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative mx-auto max-w-5xl p-6 text-center">
           <div className="mx-auto mb-5 flex items-center justify-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-              <Trophy className="h-7 w-7" />
+            <span className="flex h-12 md:h-14 w-12 md:w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+              <Trophy className="h-6 md:h-7 w-6 md:w-7" />
             </span>
-            <h1 className="font-display text-6xl leading-none tracking-wide md:text-8xl">
+            <h1 className="font-display text-4xl leading-none tracking-wide md:text-8xl">
               Bora <span className="text-primary">pro</span> <span className="text-secondary">Baba</span>
             </h1>
           </div>
@@ -158,7 +159,14 @@ function LoginForm() {
           <Field label="E-mail" type="email" value={email} onChange={setEmail} />
           <Field label="Senha" type="password" value={password} onChange={setPassword} isPassword={true} />
           <Button type="submit" className="w-full">
-            {loading ? "Entrando..." : "Entrar em campo"}
+            {loading ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  <span className="">Entrando...</span>
+                </>
+              ) : (
+                "Entrar em campo"
+              )}
           </Button>
         </form>
       </CardContent>
@@ -259,10 +267,14 @@ function SignupForm() {
               </SelectContent>
             </Select>
           </div>
-
+          
           <Button type="submit" className="w-full">
-            <Sparkles className="mr-1 h-4 w-4" />
-            {mode === "create" ? "Criar meu Baba" : "Pedir para entrar"}
+            {loading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-1 h-4 w-4" />
+            )}
+            {mode === "create" ? "Criar meu Baba" : loading ? "Entrando..." : "Pedir para entrar"}
           </Button>
         </form>
       </CardContent>

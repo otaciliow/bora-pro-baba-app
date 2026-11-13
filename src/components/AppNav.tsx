@@ -1,5 +1,6 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Home, Dices, Wallet, ShieldCheck, Trophy, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { Home, Dices, Wallet, ShieldCheck, Trophy, LogOut, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
@@ -71,21 +72,22 @@ function useLogout() {
 }
 
 function UserChip() {
-  const { user, profile } = useAuth();
-  const logout = useLogout();
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!user) return null;
 
-  const { data: group } = useQuery({
-    queryKey: ["user-group-rpc", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await (supabase.rpc as any)("get_user_group");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      navigate({ to: "/login", replace: true });
+    } catch (error) {
+      console.error(`Erro ao sair: ${error}`)
+      setIsLoggingOut(false);
+    };
+  };
 
   const name = profile?.name ?? "Atleta Base"
   const initials = name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
@@ -106,8 +108,13 @@ function UserChip() {
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</span>
-      <Button size="sm" variant="ghost" onClick={logout} aria-label="Sair">
-        <LogOut className="h-4 w-4" /> Sair
+      <Button size="sm" variant="ghost" onClick={handleLogout} disabled={isLoggingOut} aria-label="Sair">
+        {isLoggingOut ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+        ) : (
+          <LogOut className="h-4 w-4" />
+        )}
+        Sair
       </Button>
     
     </div>
@@ -200,9 +207,43 @@ export function MobileTopBar() {
 }
 
 export function MobileBottomBar() {
+  const { user } = useAuth();
+
+  const { data: group } = useQuery({
+    queryKey: ["user-group-rpc", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase.rpc as any)("get_user_group");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: userRole, isLoading: isLoadingRole } = useQuery({
+    queryKey: ["admin-role-verification", group?.id, user?.id],
+    queryFn: async () => {
+      if (!group?.id || !user?.id) return null;
+      const { data, error } = await supabase
+        .from("group_members")
+        .select("role")
+        .eq("group_id", group.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!group?.id && !!user?.id,
+  });
+  const isAdmin = !isLoadingRole && userRole?.role === "admin";
+
+  const visibleItems = ITEMS.filter((item) => item.to !== "/admin" || isAdmin);
+  const gridColsClass = visibleItems.length === 4 ? "grid-cols-4" : "grid-cols-3";
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-      {ITEMS.map(({ to, label, icon: Icon }) => (
+    <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${gridColsClass} border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden`}>
+      {visibleItems.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}

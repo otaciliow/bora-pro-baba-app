@@ -1,9 +1,11 @@
 // src/components/Header.tsx
-import { Trophy, Dices, Wallet, ShieldCheck, LogOut } from "lucide-react";
+
+import { useState } from "react";
+import { Trophy, Dices, Wallet, ShieldCheck, LogOut, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DesktopHeaderSkeleton } from "@/components/ui/skeleton";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +19,8 @@ const POSITION_TO_PLAYER: Record<string, string> = {
 
 export function DesktopHeader() {
   const { user, profile, signOut, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["user-group-rpc", user?.id],
@@ -45,6 +49,17 @@ export function DesktopHeader() {
     },
     enabled: !!group?.id && !!user?.id,
   });
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      navigate({ to: "/login", replace: true });
+    } catch (error) {
+      console.error(`Erro ao sair: ${error}`)
+      setIsLoggingOut(false);
+    };
+  };
 
   const isHeaderLoading = authLoading || groupLoading || isLoadingRole;
   const isAdmin = !isLoadingRole && userRole?.role === "admin";
@@ -128,11 +143,16 @@ export function DesktopHeader() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={signOut}
+            onClick={handleLogout}
+            disabled={isLoggingOut}
             title="Sair"
             className="ml-1 h-8 w-8 text-muted-foreground hover:text-destructive"
           >
-            <LogOut className="h-4 w-4" />
+            {isLoggingOut ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

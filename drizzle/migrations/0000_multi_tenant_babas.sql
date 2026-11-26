@@ -8,7 +8,7 @@ CREATE TABLE public.profiles (
   name text NOT NULL DEFAULT '',
   phone text,
   primary_position public.player_position,
-  rating numeric NOT NULL DEFAULT 3,
+  rating numeric NOT NULL DEFAULT 5,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE public.groups (

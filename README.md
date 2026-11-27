@@ -1,179 +1,276 @@
-﻿# Bora pro Baba
+# Bora pro Baba
 
-Aplicação web para organizar partidas de futebol entre grupos. Os jogadores podem acompanhar a próxima partida, confirmar presença e enviar convites para convidados. Administradores gerenciam partidas, membros, mensalidades e avaliações; a tela de sorteio distribui os jogadores por posição e nota.
+Aplicação web para organizar partidas de futebol em grupo. Atletas podem
+consultar a próxima partida, confirmar presença e acompanhar mensalidades.
+A diretoria pode aprovar membros, gerir partidas e pagamentos, configurar o
+grupo e avaliar atletas. A tela de sorteio monta times equilibrados por
+posição e nota.
 
 ## Funcionalidades
 
-- Cadastro e acesso de usuários por e-mail e senha com Supabase Auth.
-- Criação de grupos ou solicitação para entrar em um grupo existente por código de convite.
-- Lista de presença e convites para convidados.
-- Gestão administrativa de partidas, solicitações de entrada, pagamentos, chave Pix e avaliações dos jogadores.
-- Visualização de mensalidades e envio de comprovantes.
-- Sorteio de times considerando posição e nota dos jogadores.
+### Atletas
 
-## Tecnologias
+- Criar conta ou entrar com e-mail e senha.
+- Criar um grupo ou solicitar entrada por código de convite.
+- Consultar a próxima partida aberta.
+- Confirmar ou cancelar presença.
+- Consultar mensalidade e chave PIX.
+- Informar pagamentos e acompanhar seu histórico.
+- Participar por meio de um link público de convidado.
+- Sortear times considerando posição e nota e copiar a escalação.
 
-- React 19, TypeScript e Vite 8
+### Diretoria
+
+- Aprovar ou rejeitar solicitações de entrada.
+- Alterar status e papel dos membros.
+- Criar, editar, fechar e excluir partidas.
+- Configurar limite de atletas confirmados.
+- Gerar convites para convidados.
+- Aprovar ou remover convidados da lista.
+- Configurar mensalidade e chave PIX.
+- Aprovar ou rejeitar pagamentos.
+- Avaliar atletas para o sorteio de times.
+
+## Stack
+
+- React 19 e TypeScript
 - TanStack Start e TanStack Router
+- TanStack Query
+- Vite 8
 - Tailwind CSS 4
+- Radix UI, Lucide React e componentes internos
 - Supabase Auth e PostgreSQL
-- Drizzle Kit para configuração e migrações PostgreSQL
+- Drizzle Kit e SQL versionado
+- ESLint, Prettier e Vitest
 
-## Requisitos
+## Estrutura
 
-- Node.js 20 ou superior e npm (o projeto também inclui `bun.lock` para quem preferir Bun).
-- Um projeto Supabase para autenticação e dados da aplicação.
+```text
+.
+|-- drizzle/
+|   |-- migrations/       Migrações SQL e metadados
+|   `-- schema.ts         Schema Drizzle; atualmente vazio
+|-- public/               Arquivos estáticos
+`-- src/
+    |-- components/       Telas e componentes da interface
+    |   `-- ui/           Componentes reutilizáveis
+    |-- hooks/            Hooks da aplicação
+    |-- integrations/
+    |   `-- supabase/     Clientes, middleware e tipos Supabase
+    |-- lib/              Auth, consultas e utilitários
+    |-- routes/           Rotas file-based do TanStack Router
+    |-- routeTree.gen.ts  Arquivo gerado pelo router
+    |-- router.tsx        Configuração do router
+    |-- start.ts          Inicialização da aplicação
+    `-- server.ts         Entrada SSR
+```
+
+O TanStack Router gera `src/routeTree.gen.ts`. Não edite esse arquivo
+diretamente; altere os arquivos em `src/routes/`.
+
+### Rotas
+
+| Rota | Descrição |
+| --- | --- |
+| `/login` | Entrar ou criar conta |
+| `/` | Próxima partida e lista de presença |
+| `/admin` | Gestão do grupo e da diretoria |
+| `/financeiro` | Mensalidade, PIX e pagamentos |
+| `/sorteio` | Distribuição dos times |
+| `/convite/$token` | Inscrição pública de convidado |
+
+## Pré-requisitos
+
+- Node.js 20.19+ ou 22.12+
+- npm 10+
+- Projeto Supabase
+- PowerShell ou outro terminal compatível
 
 Confira as versões:
 
-```bash
+```powershell
 node --version
 npm --version
 ```
 
-## Instalação e configuração
+## Instalação
 
-Na raiz do repositório, instale as dependências:
+Na raiz do repositório:
 
-```bash
+```powershell
 npm install
 ```
 
-Copie o arquivo de exemplo e configure as credenciais:
+Use npm de forma consistente. `package-lock.json` é o lockfile versionado da
+aplicação.
+
+## Configuração do Supabase
+
+1. Crie um projeto no Supabase.
+2. Em **Project Settings > API**, obtenha a URL e a chave pública.
+3. Copie o arquivo de exemplo:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-No macOS/Linux, use `cp .env.example .env`. Preencha no `.env` os valores do seu projeto Supabase:
+No macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+As variáveis utilizadas são:
 
 | Variável | Uso |
 | --- | --- |
-| `SUPABASE_URL` | URL do Supabase usada pelo servidor |
-| `SUPABASE_PUBLISHABLE_KEY` | Chave pública usada pelo servidor e middleware de autenticação |
-| `VITE_SUPABASE_URL` | URL do Supabase injetada no cliente pelo Vite |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave pública injetada no cliente pelo Vite |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave privilegiada, necessária somente a operações administrativas do servidor que usam o cliente admin |
-| `LOVABLE_DB_MIGRATION_URL` | URL PostgreSQL, necessária somente para executar Drizzle Kit |
+| `SUPABASE_URL` | URL usada pelo servidor e fallback do cliente |
+| `SUPABASE_PUBLISHABLE_KEY` | Chave pública usada pelo servidor e fallback |
+| `VITE_SUPABASE_URL` | URL enviada ao cliente pelo Vite |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave pública enviada ao cliente |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave privilegiada exclusiva de operações server-side |
+| `SUPABASE_PROJECT_ID` | Identificador opcional do projeto |
+| `VITE_SUPABASE_PROJECT_ID` | Identificador opcional disponível no cliente |
+| `LOVABLE_DB_MIGRATION_URL` | URL PostgreSQL para o Drizzle Kit |
 
-As quatro primeiras variáveis são necessárias para a aplicação inicializar o cliente Supabase no navegador e no servidor. Obtenha a URL e a chave pública em **Project Settings > API** no painel do Supabase. Não use a chave `service_role` como chave pública e nunca exponha essa chave em variáveis `VITE_*`.
+Exemplo mínimo:
 
-As configurações de autenticação do Supabase também precisam permitir a URL local da aplicação. Para testar o cadastro local, configure a confirmação de e-mail e o provedor de e-mail de acordo com o fluxo de desenvolvimento do seu projeto; não desative confirmações em um ambiente de produção sem avaliar as implicações de segurança.
+```dotenv
+SUPABASE_URL="https://SEU-PROJETO.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="SUA_CHAVE_PUBLICA"
+VITE_SUPABASE_URL="https://SEU-PROJETO.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="SUA_CHAVE_PUBLICA"
+```
 
-> Não existe um fluxo de autenticação mock na aplicação atual. A tela `/login` chama o Supabase; sem URL e chave válidas, a inicialização ou o login falharão. Após alterar `.env`, pare e reinicie o servidor.
+Nunca coloque `SUPABASE_SERVICE_ROLE_KEY` em uma variável `VITE_*`, nunca
+publique essa chave e não envie arquivos `.env` ao repositório.
 
-## Banco de dados e estado das migrações
+Configure no Supabase os provedores de autenticação, templates de e-mail e URLs
+permitidas para o endereço local e para o ambiente de produção. Após alterar
+`.env`, reinicie o servidor Vite.
 
-A migração inicial está em [`drizzle/migrations/0000_multi_tenant_babas.sql`](drizzle/migrations/0000_multi_tenant_babas.sql). Ela cria tabelas básicas de perfis, grupos, membros, partidas, presenças e pagamentos, além de políticas RLS e funções de onboarding.
+## Banco de dados
 
-Para aplicá-la em um projeto Supabase, abra o **SQL Editor**, revise o SQL e execute-o no banco de desenvolvimento. Faça backup e revisão antes de aplicar mudanças em produção.
+As migrações versionadas devem ser aplicadas em ordem no SQL Editor de um
+projeto Supabase de desenvolvimento:
 
-**Atenção:** a migração inicial não cobre todo o contrato usado pelo código atual. As telas também consultam `match_guests` e `guest_invites` e chamam funções RPC como `get_user_group`, `update_group_monthly_fee`, `update_group_pix` e `update_athlete_rating`, que não estão definidas nessa migração. Além disso, `drizzle/schema.ts` está vazio. Portanto, o SQL versionado ainda não é suficiente para habilitar todas as funções integradas ao Supabase. O build da aplicação pode ser executado, mas o uso dessas funções exige as migrações/objetos correspondentes no banco.
+1. `drizzle/migrations/0000_multi_tenant_babas.sql`
+2. `drizzle/migrations/0001_single_baba_and_guests.sql`
+3. `drizzle/migrations/0002_group_max_confirmed.sql`
+4. `drizzle/migrations/0003_queries_rulesets_migrations.sql`
 
-O Drizzle Kit lê `LOVABLE_DB_MIGRATION_URL` por meio de [`drizzle.config.ts`](drizzle.config.ts). Como o schema Drizzle ainda não está definido e não há scripts de migração no `package.json`, não use `drizzle-kit generate` esperando que ele gere o esquema completo da aplicação.
+Elas criam ou alteram perfis, grupos, membros, partidas, presenças, convidados,
+pagamentos, funções RPC e políticas RLS.
+
+Antes de aplicar migrações em produção:
+
+- faça backup do banco;
+- revise o SQL completo;
+- confirme o projeto Supabase selecionado;
+- teste RLS e permissões;
+- use credenciais separadas por ambiente.
+
+O estado atual tem duas limitações importantes:
+
+- `drizzle/schema.ts` está vazio e não representa o banco da aplicação;
+- o Drizzle Kit está configurado em `drizzle.config.ts`, mas não há schema
+  Drizzle implementado nem scripts de migração no `package.json`.
+
+Não execute `drizzle-kit generate` esperando recriar automaticamente todas as
+tabelas da aplicação. `LOVABLE_DB_MIGRATION_URL` só é necessário para uma
+operação direta via Drizzle Kit.
 
 ## Executar localmente
 
-Depois de instalar dependências e preencher `.env`:
+Depois de instalar as dependências, configurar o `.env` e aplicar as migrações:
 
-```bash
+```powershell
 npm run dev
 ```
 
-Abra o endereço impresso no terminal (por padrão, `http://localhost:5173`). Mantenha esse terminal aberto enquanto usa a aplicação; pressione `Ctrl+C` para parar o servidor.
+Abra o endereço exibido no terminal, normalmente
+`http://localhost:5173`. Use `Ctrl+C` para encerrar o servidor.
 
-Rotas principais:
+Não existe autenticação mock. A tela `/login` depende do Supabase. Sem as
+variáveis mínimas, o cliente informa quais variáveis estão ausentes. Sem as
+tabelas, funções RPC e políticas necessárias no banco, consultas e ações podem
+falhar mesmo quando o login inicial funciona.
 
-- `/login`: entrar ou criar uma conta e criar/solicitar entrada em um grupo.
-- `/`: próxima partida e presença.
-- `/admin`: ferramentas administrativas do grupo.
-- `/financeiro`: mensalidades e comprovantes.
-- `/sorteio`: distribuição dos times.
-- `/convite/:token`: fluxo de convite de convidado.
-
-As páginas internas dependem de sessão autenticada e de um grupo/dados compatíveis no Supabase. A migração inicial, isoladamente, não configura todos os recursos citados na seção do banco.
-
-## Scripts npm
+## Scripts
 
 | Comando | Descrição |
 | --- | --- |
 | `npm run dev` | Inicia o servidor Vite em desenvolvimento |
 | `npm run build` | Gera o build de produção |
 | `npm run build:dev` | Gera o build no modo `development` |
-| `npm run preview` | Pré-visualiza o build localmente |
+| `npm run preview` | Serve localmente o build gerado |
 | `npm run lint` | Executa ESLint em todo o repositório |
 | `npm run format` | Formata arquivos com Prettier |
 
-Verificações locais:
+Não há script `test` no `package.json`. Execute o teste atual com:
 
-```bash
+```powershell
+npx vitest run
+```
+
+Verificações recomendadas antes de entregar uma alteração:
+
+```powershell
+npx vitest run
 npm run lint
 npm run build
 ```
 
-Não há atualmente um script `npm test` definido no `package.json`.
-
-## Estrutura do repositório
-
-```text
-src/
-  components/       Telas e componentes da interface
-  routes/           Rotas do TanStack Router
-  integrations/     Integração e autenticação Supabase
-  lib/              Autenticação, utilitários e tratamento de erros
-  styles.css        Estilos globais
-drizzle/
-  schema.ts         Schema Drizzle (atualmente vazio)
-  migrations/       Migrações SQL versionadas
-public/             Arquivos estáticos
-```
-
-`src/routeTree.gen.ts` é gerado pelo TanStack Router. Crie ou altere rotas nos arquivos de `src/routes/`.
-
 ## Solução de problemas
 
-### `npm run dev` termina com código 1
+### Variáveis do Supabase ausentes
 
-Leia a primeira mensagem de erro no terminal. Se mencionar `Missing Supabase environment variable(s)`, confira se `.env` existe na raiz e contém `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. Reinicie o Vite depois de salvar o arquivo. Não compartilhe chaves ao pedir ajuda; substitua os valores por marcadores antes de enviar logs.
+Confirme que `.env` está na raiz e contém:
 
-### O login funciona, mas as páginas mostram erros de tabela ou função inexistente
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-Compare a mensagem do Supabase com os objetos da seção [Banco de dados e estado das migrações](#banco-de-dados-e-estado-das-migrações). A migração atual não inclui todos os recursos que a interface consulta.
+Depois reinicie o servidor Vite.
 
-### `npm run lint` acusa erros do Prettier
+### Tabela, política ou função inexistente
 
-O lint verifica todo o repositório e pode apontar diferenças de formatação ou finais de linha em arquivos existentes. Para formatar um arquivo específico, execute `npx prettier --write caminho/do/arquivo`; revise o diff antes de formatar muitos arquivos.
+Verifique se todas as migrações foram aplicadas no projeto correto e se a conta
+possui a função ou política necessária. Compare a mensagem do Supabase com os
+arquivos de `drizzle/migrations/`.
 
 ### Dependências inconsistentes
 
-Use um único gerenciador por instalação. Para reinstalar com npm no PowerShell:
+Para reinstalar com npm no PowerShell:
 
 ```powershell
 Remove-Item -Recurse -Force node_modules
-npm install
+npm ci
 ```
 
-Não remova `package-lock.json` como tentativa de correção: ele registra as versões instaladas pelo npm.
+Não remova `package-lock.json`.
+
+### Erros de formatação
+
+Formate um arquivo específico e revise o diff:
+
+```powershell
+npx prettier --write caminho/do/arquivo
+```
 
 ## Segurança
 
-- Não versione `.env` nem publique strings de conexão ou credenciais.
-- Use somente a chave pública do Supabase no cliente. `SUPABASE_SERVICE_ROLE_KEY` deve permanecer exclusivamente no servidor.
-- Mantenha RLS habilitado e revise as políticas antes de disponibilizar o banco em produção.
-
-## Segurança
-
-- Nunca versionar arquivos `.env` ou qualquer credencial sensível.
-- Não expor `SUPABASE_SERVICE_ROLE_KEY` no navegador.
-- Manter o Row Level Security (RLS) habilitado nas tabelas do Supabase.
-- Revisar políticas SQL antes de mandar o projeto para produção.
-- Usar credenciais separadas entre ambiente local, homologação e produção.
+- Não versione `.env`, strings de conexão ou credenciais.
+- Use somente a chave pública no cliente.
+- Mantenha `SUPABASE_SERVICE_ROLE_KEY` exclusivamente no servidor.
+- Mantenha RLS habilitado e revise todas as políticas.
+- Não use dados reais de produção em testes locais.
 
 ## Contribuição
 
-Para contribuir com o projeto:
-
-1. Crie uma branch de trabalho.
-2. Faça alterações e mantenha o código consistente.
-3. Execute lint e build antes de enviar alterações.
-4. Abra um pull request com descrição clara do problema e da solução.
+1. Crie uma branch a partir da versão principal.
+2. Faça alterações pequenas e relacionadas.
+3. Preserve os padrões existentes de React, TypeScript e TanStack Router.
+4. Execute testes, lint e build.
+5. Abra um pull request com contexto, mudanças e validações realizadas.
